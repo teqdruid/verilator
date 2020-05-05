@@ -8,8 +8,10 @@
 
 `ifdef VERILATOR
  `define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write("%%Error: %s:%0d:  got='h%x exp='h%x\n", `__FILE__,`__LINE__, (gotv), (expv)); $stop; end while(0)
+ `define checktrue(gotv) do if (!(gotv)) begin $write("%%Error: %s:%0d: expected true\n", `__FILE__,`__LINE__); $stop; end while(0)
 `else
  `define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write("%%Error: %s:%0d:  got='h%x exp='h%x\n", `__FILE__,`__LINE__, (gotv), (expv)); end while(0)
+ `define checktrue(gotv) do if (!(gotv)) begin $write("%%Error: %s:%0d: expected true\n", `__FILE__,`__LINE__); end while(0)
 `endif
 
 module t (/*AUTOARG*/);
@@ -52,6 +54,11 @@ module t (/*AUTOARG*/);
    int        o_int [1:0];
    integer    i_integer [1:0];
    integer    o_integer [1:0];
+
+   byte       i_byte_long [12:0];
+   byte       o_byte_long [10:0];
+   int        i_int_long [12:0];
+   int        o_int_long [10:0];
    // verilator lint_on UNUSED
 
    import "DPI-C" function int dpii_failure();
@@ -75,6 +82,9 @@ module t (/*AUTOARG*/);
    import "DPI-C" function void dpii_open_int(input int i [], output int o []);
    import "DPI-C" function void dpii_open_integer(input integer i [], output integer o []);
 
+   import "DPI-C" function void dpii_open_byte_order(input byte i [], output byte o []);
+   import "DPI-C" function void dpii_open_int_order(input int i [], output int o []);
+
    import "DPI-C" function int dpii_failed();
 
    reg [95:0] crc;
@@ -96,6 +106,29 @@ module t (/*AUTOARG*/);
       dpii_open_byte(i_byte, o_byte);
       dpii_open_int(i_int, o_int);
       dpii_open_integer(i_integer, o_integer);
+
+      // Pre populate byte and int arrays
+      for (byte a=0; a<=12; a=a+1) begin
+         i_byte_long[a[3:0]] = a;
+         i_int_long[a[3:0]] = {a, a+8'd1, a+8'd2, a+8'd3};
+      end
+
+      // Byte ordering test
+      // dpii_open_byte_order(i_byte_long, o_byte_long);
+      // for (byte a=0; a<=10; a=a+1) begin
+      //    `checkh(o_byte_long[a[3:0]], i_byte_long[((a+2))] + 5);
+      //    if (a != 10) begin
+      //       `checktrue(o_byte_long[a[3:0]] < o_byte_long[a+1]);
+      //    end
+      // end
+
+      dpii_open_int_order(i_int_long, o_int_long);
+      for (byte a=0; a<=10; a=a+1) begin
+         `checkh(o_int_long[a[3:0]], i_int_long[((a+2))] + 5);
+         if (a != 10) begin
+            `checktrue(o_int_long[a[3:0]] < o_int_long[a+1]);
+         end
+      end
 
       for (int a=-2; a<=2; a=a+1) begin
          i_rl_p0_u1[a] = crc[0];

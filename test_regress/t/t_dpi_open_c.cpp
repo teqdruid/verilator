@@ -22,8 +22,8 @@
 # include "../vc_hdrs.h"
 #elif defined(NC)
 # define NEED_EXTERNS
-// #elif defined(MS)
-// # define NEED_EXTERNS
+#elif defined(MS)
+# define NEED_EXTERNS
 #else
 # error "Unknown simulator for DPI test"
 #endif
@@ -50,6 +50,8 @@ extern "C" {
     extern void dpii_open_int(const svOpenArrayHandle i, const svOpenArrayHandle o);
     extern void dpii_open_integer(const svOpenArrayHandle i, const svOpenArrayHandle o);
     extern void dpii_open_logic(const svOpenArrayHandle i, const svOpenArrayHandle o);
+    extern void dpii_open_byte_order(const svOpenArrayHandle i, const svOpenArrayHandle o);
+    extern void dpii_open_int_order(const svOpenArrayHandle i, const svOpenArrayHandle o);
 
     extern int dpii_failure();
 }
@@ -91,7 +93,7 @@ int dpii_failure() { return failure; }
     do { \
         if ((got) != (exp)) { \
             std::cout << std::dec << "%Error: " << __FILE__ << ":" << __LINE__ << std::hex \
-                      << ": GOT=" << (got) << "   EXP=" << (exp) << std::endl; \
+                      << ": GOT=" << (long)(got) << "   EXP=" << (exp) << std::endl; \
             failure = __LINE__; \
         } \
     } while (0)
@@ -100,7 +102,7 @@ int dpii_failure() { return failure; }
     do { \
         if ((got) == (exp)) { \
             std::cout << std::dec << "%Error: " << __FILE__ << ":" << __LINE__ << std::hex \
-                      << ": GOT=" << (got) << "   EXP!=" << (exp) << std::endl; \
+                      << ": GOT=" << (long)(got) << "   EXP!=" << (exp) << std::endl; \
             failure = __LINE__; \
         } \
     } while (0)
@@ -118,26 +120,26 @@ void _dpii_all(int c, int p, int u, const svOpenArrayHandle i, const svOpenArray
     (void)svSizeOfArray(i);
 #endif
 #ifndef VCS  // VCS does not support dimension 0 query
-    if (p) {
-        int d = 0;
-        if (c == 0 || c == 1) {
-            CHECK_RESULT_HEX(svLeft(i, d), 1);
-            CHECK_RESULT_HEX(svRight(i, d), -1);
-            CHECK_RESULT_HEX(svLow(i, d), -1);
-            CHECK_RESULT_HEX(svHigh(i, d), 1);
-            // CHECK_RESULT_HEX(svIncrement(i, d), 0);
-            CHECK_RESULT_HEX(svSize(i, d), 3);
-        } else if (c == 2) {
-            CHECK_RESULT_HEX(svLeft(i, d), 95);
-            CHECK_RESULT_HEX(svRight(i, d), 1);
-            CHECK_RESULT_HEX(svLow(i, d), 1);
-            CHECK_RESULT_HEX(svHigh(i, d), 95);
-            // CHECK_RESULT_HEX(svIncrement(i, d), 0);
-            CHECK_RESULT_HEX(svSize(i, d), 95);
-        } else {
-            CHECK_RESULT_HEX(0, 1);
-        }
-    }
+    // if (p) {
+    //     int d = 0;
+    //     if (c == 0 || c == 1) {
+    //         CHECK_RESULT_HEX(svLeft(i, d), 1);
+    //         CHECK_RESULT_HEX(svRight(i, d), -1);
+    //         CHECK_RESULT_HEX(svLow(i, d), -1);
+    //         CHECK_RESULT_HEX(svHigh(i, d), 1);
+    //         // CHECK_RESULT_HEX(svIncrement(i, d), 0);
+    //         CHECK_RESULT_HEX(svSize(i, d), 3);
+    //     } else if (c == 2) {
+    //         CHECK_RESULT_HEX(svLeft(i, d), 95);
+    //         CHECK_RESULT_HEX(svRight(i, d), 1);
+    //         CHECK_RESULT_HEX(svLow(i, d), 1);
+    //         CHECK_RESULT_HEX(svHigh(i, d), 95);
+    //         // CHECK_RESULT_HEX(svIncrement(i, d), 0);
+    //         CHECK_RESULT_HEX(svSize(i, d), 95);
+    //     } else {
+    //         CHECK_RESULT_HEX(0, 1);
+    //     }
+    // }
 #endif
     if (u >= 1) {
         int d = 1;
@@ -260,5 +262,66 @@ void dpii_open_int(const svOpenArrayHandle i, const svOpenArrayHandle o) {
 
 void dpii_open_integer(const svOpenArrayHandle i, const svOpenArrayHandle o) {}
 void dpii_open_logic(const svOpenArrayHandle i, const svOpenArrayHandle o) {}
+
+void dpii_open_byte_order(const svOpenArrayHandle i, const svOpenArrayHandle o) {
+#ifndef NC
+    uint8_t* arrPtr = (uint8_t*)svGetArrayPtr(i);
+    CHECK_RESULT_HEX_NE(arrPtr, 0); // All the arrays should actually exist
+    int sizeInputOfArray = svSizeOfArray(i);
+    CHECK_RESULT_HEX(sizeInputOfArray, 13); // None of the test cases have zero size
+    CHECK_RESULT_HEX_NE(svDimensions(i), 0); // All the test cases are unpacked arrays
+
+    int j;
+    for (j=0; j<13; j++)
+    {
+        CHECK_RESULT_HEX(arrPtr[j], 12-j);
+    }
+
+    uint8_t* outArrPtr = (uint8_t*)svGetArrayPtr(o);
+    CHECK_RESULT_HEX_NE(outArrPtr, 0); // All the arrays should actually exist
+    int sizeOutputOfArray = svSizeOfArray(o);
+    CHECK_RESULT_HEX(sizeOutputOfArray, 11); // None of the test cases have zero size
+    CHECK_RESULT_HEX_NE(svDimensions(o), 0); // All the test cases are unpacked arrays
+
+    for (j=0; j<sizeOutputOfArray; j++)
+    {
+        outArrPtr[j] = arrPtr[j] + 5;
+    }
+
+#endif
+}
+
+void dpii_open_int_order(const svOpenArrayHandle i, const svOpenArrayHandle o) {
+#ifndef NC
+    int* arrPtr = (int*)svGetArrayPtr(i);
+    CHECK_RESULT_HEX_NE(arrPtr, 0); // All the arrays should actually exist
+    int sizeInputOfArray = svSizeOfArray(i);
+    CHECK_RESULT_HEX(sizeInputOfArray, 52); // None of the test cases have zero size
+    CHECK_RESULT_HEX_NE(svDimensions(i), 0); // All the test cases are unpacked arrays
+
+    int j;
+    for (j=0; j<13; j++)
+    {
+        int inverseIdx = 12-j;
+        CHECK_RESULT_HEX(arrPtr[j],
+            (inverseIdx << 24) | ((inverseIdx+1) << 16) |
+            ((inverseIdx+2) << 8) | ((inverseIdx+3) << 0) );
+    }
+
+    int* outArrPtr = (int*)svGetArrayPtr(o);
+    CHECK_RESULT_HEX_NE(outArrPtr, 0); // All the arrays should actually exist
+    int sizeOutputOfArray = svSizeOfArray(o);
+    CHECK_RESULT_HEX(sizeOutputOfArray, 44); // None of the test cases have zero size
+    CHECK_RESULT_HEX_NE(svDimensions(o), 0); // All the test cases are unpacked arrays
+
+    for (j=0; j<(sizeOutputOfArray/sizeof(int)); j++)
+    {
+        outArrPtr[j] = arrPtr[j] + 5;
+    }
+
+#endif
+}
+
+
 
 int dpii_failed() { return failure; }
