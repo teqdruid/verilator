@@ -114,13 +114,13 @@ module t (/*AUTOARG*/);
       end
 
       // Byte ordering test
-      // dpii_open_byte_order(i_byte_long, o_byte_long);
-      // for (byte a=0; a<=10; a=a+1) begin
-      //    `checkh(o_byte_long[a[3:0]], i_byte_long[((a+2))] + 5);
-      //    if (a != 10) begin
-      //       `checktrue(o_byte_long[a[3:0]] < o_byte_long[a+1]);
-      //    end
-      // end
+      dpii_open_byte_order(i_byte_long, o_byte_long);
+      for (byte a=0; a<=10; a=a+1) begin
+         `checkh(o_byte_long[a[3:0]], i_byte_long[((a+2))] + 5);
+         if (a != 10) begin
+            `checktrue(o_byte_long[a[3:0]] < o_byte_long[a+1]);
+         end
+      end
 
       dpii_open_int_order(i_int_long, o_int_long);
       for (byte a=0; a<=10; a=a+1) begin

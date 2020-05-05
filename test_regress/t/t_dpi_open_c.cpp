@@ -22,8 +22,8 @@
 # include "../vc_hdrs.h"
 #elif defined(NC)
 # define NEED_EXTERNS
-#elif defined(MS)
-# define NEED_EXTERNS
+// #elif defined(MS)
+// # define NEED_EXTERNS
 #else
 # error "Unknown simulator for DPI test"
 #endif
@@ -120,26 +120,26 @@ void _dpii_all(int c, int p, int u, const svOpenArrayHandle i, const svOpenArray
     (void)svSizeOfArray(i);
 #endif
 #ifndef VCS  // VCS does not support dimension 0 query
-    // if (p) {
-    //     int d = 0;
-    //     if (c == 0 || c == 1) {
-    //         CHECK_RESULT_HEX(svLeft(i, d), 1);
-    //         CHECK_RESULT_HEX(svRight(i, d), -1);
-    //         CHECK_RESULT_HEX(svLow(i, d), -1);
-    //         CHECK_RESULT_HEX(svHigh(i, d), 1);
-    //         // CHECK_RESULT_HEX(svIncrement(i, d), 0);
-    //         CHECK_RESULT_HEX(svSize(i, d), 3);
-    //     } else if (c == 2) {
-    //         CHECK_RESULT_HEX(svLeft(i, d), 95);
-    //         CHECK_RESULT_HEX(svRight(i, d), 1);
-    //         CHECK_RESULT_HEX(svLow(i, d), 1);
-    //         CHECK_RESULT_HEX(svHigh(i, d), 95);
-    //         // CHECK_RESULT_HEX(svIncrement(i, d), 0);
-    //         CHECK_RESULT_HEX(svSize(i, d), 95);
-    //     } else {
-    //         CHECK_RESULT_HEX(0, 1);
-    //     }
-    // }
+    if (p) {
+        int d = 0;
+        if (c == 0 || c == 1) {
+            CHECK_RESULT_HEX(svLeft(i, d), 1);
+            CHECK_RESULT_HEX(svRight(i, d), -1);
+            CHECK_RESULT_HEX(svLow(i, d), -1);
+            CHECK_RESULT_HEX(svHigh(i, d), 1);
+            // CHECK_RESULT_HEX(svIncrement(i, d), 0);
+            CHECK_RESULT_HEX(svSize(i, d), 3);
+        } else if (c == 2) {
+            CHECK_RESULT_HEX(svLeft(i, d), 95);
+            CHECK_RESULT_HEX(svRight(i, d), 1);
+            CHECK_RESULT_HEX(svLow(i, d), 1);
+            CHECK_RESULT_HEX(svHigh(i, d), 95);
+            // CHECK_RESULT_HEX(svIncrement(i, d), 0);
+            CHECK_RESULT_HEX(svSize(i, d), 95);
+        } else {
+            CHECK_RESULT_HEX(0, 1);
+        }
+    }
 #endif
     if (u >= 1) {
         int d = 1;
